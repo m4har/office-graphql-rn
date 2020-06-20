@@ -4,6 +4,8 @@ import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 
 // initial screen
 import Login from '../screens/Login';
+import Users from '../screens/Users';
+import Tenants from '../screens/Tenants';
 
 //bottomtabs dashboard
 import Dashboard from './BottomTab';
@@ -21,6 +23,8 @@ const Root = () => {
       <Navigator screenOptions={screenOptions}>
         <Screen name="login" component={Login} />
         <Screen name="dashboard" component={Dashboard} />
+        <Screen name="user" component={Users} />
+        <Screen name="tenant" component={Tenants} />
       </Navigator>
     </NavigationContainer>
   );

@@ -34,8 +34,8 @@ const AddUser = () => {
       const users = await newUser({
         variables: {...state, password: state.password.toLowerCase()},
       });
+      await Promise.all([allUser.refetch(), profile.refetch()]);
       if (users.data) {
-        await Promise.all([allUser.refetch(), profile.refetch()]);
         Alert.alert('', 'user added', [{text: 'OK', onPress: () => goBack()}]);
       }
     } catch (error) {

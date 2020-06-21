@@ -1,13 +1,26 @@
 import React from 'react';
 import {View, StyleSheet, Alert} from 'react-native';
-import {Card, Avatar, List, Divider, Button} from 'react-native-paper';
+import {
+  Card,
+  Avatar,
+  List,
+  Divider,
+  Button,
+  ActivityIndicator,
+} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useResponsiveFontSize} from 'react-native-responsive-dimensions';
-import {useNavigation} from '@react-navigation/native';
+import {responsiveFontSize} from 'react-native-responsive-dimensions';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {useQuery} from '@apollo/react-hooks';
+import {DETAIL_USER} from '../../graphql/tag';
 
 const DetailUser = () => {
   const {navigate} = useNavigation();
-  const iconSize = useResponsiveFontSize(4);
+  const {params} = useRoute();
+  const {data, loading} = useQuery(DETAIL_USER, {
+    variables: {id: params.id},
+  });
+  const iconSize = responsiveFontSize(4);
   const LeftIcon = icon => props => (
     <Icon name={icon} {...props} size={iconSize} />
   );
@@ -18,32 +31,35 @@ const DetailUser = () => {
     ]);
   };
   const onEditUser = () => navigate('editUser');
+  if (loading) return <ActivityIndicator />;
   return (
     <View style={styles.container}>
       <Card style={styles.card}>
         <View style={styles.image}>
           <Avatar.Image
-            size={useResponsiveFontSize(20)}
-            source={{
-              uri:
-                'https://image.freepik.com/free-vector/man-avatar-profile-round-icon_24640-14046.jpg',
-            }}
+            size={responsiveFontSize(20)}
+            source={{uri: data.user.photo}}
           />
         </View>
-        <List.Item title="Mahardicka Nurachman" left={LeftIcon('account')} />
+        <List.Item title={data.user.name} left={LeftIcon('account')} />
         <Divider />
-        <List.Item title="Operator" left={LeftIcon('worker')} />
+        <List.Item title={data.user.role} left={LeftIcon('worker')} />
         <Divider />
-        <List.Item title="Mahardicka404@gmail.com" left={LeftIcon('email')} />
+        <List.Item title={data.user.email} left={LeftIcon('email')} />
         <Divider />
-        <View style={styles.viewButton}>
-          <Button mode="contained" onPress={onEditUser} style={styles.button}>
-            Edit User
-          </Button>
-          <Button mode="outlined" onPress={onDeleteUser} style={styles.button}>
-            Delete user
-          </Button>
-        </View>
+        {data.user.role !== 'super admin' && (
+          <View style={styles.viewButton}>
+            <Button mode="contained" onPress={onEditUser} style={styles.button}>
+              Edit User
+            </Button>
+            <Button
+              mode="outlined"
+              onPress={onDeleteUser}
+              style={styles.button}>
+              Delete user
+            </Button>
+          </View>
+        )}
       </Card>
     </View>
   );
@@ -54,7 +70,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    flex: 1,
     marginHorizontal: 15,
     marginVertical: 10,
     padding: 10,

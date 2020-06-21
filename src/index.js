@@ -1,16 +1,16 @@
 import React from 'react';
+import {Provider as PaperProvider, DefaultTheme} from 'react-native-paper';
+import {StoreProvider} from 'easy-peasy';
 import {ApolloClient} from 'apollo-client';
 import {createHttpLink} from 'apollo-link-http';
 import {InMemoryCache} from 'apollo-cache-inmemory';
 import {ApolloProvider} from '@apollo/react-hooks';
-import {Provider as PaperProvider, DefaultTheme} from 'react-native-paper';
-
+import {setContext} from 'apollo-link-context';
 // root routes
 import Root from './routes';
+// store
+import {store} from './redux';
 
-const link = createHttpLink({uri: 'https://kity-graph.herokuapp.com/graphql'});
-const cache = new InMemoryCache();
-const client = new ApolloClient({link, cache});
 const theme = {
   ...DefaultTheme,
   colors: {
@@ -21,12 +21,28 @@ const theme = {
 };
 
 const App = () => {
+  const link = createHttpLink({
+    uri: 'https://kity-graph.herokuapp.com/graphql',
+  });
+  const authLink = setContext((_, {headers}) => {
+    const token = store.getState().auth.token;
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : '',
+      },
+    };
+  });
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({link: authLink.concat(link), cache});
   return (
-    <PaperProvider theme={theme}>
+    <StoreProvider store={store}>
       <ApolloProvider client={client}>
-        <Root />
+        <PaperProvider theme={theme}>
+          <Root />
+        </PaperProvider>
       </ApolloProvider>
-    </PaperProvider>
+    </StoreProvider>
   );
 };
 export default App;

@@ -68,3 +68,9 @@ export const EDIT_USER = gql`
     editUser(id: $id, name: $name, role: $role)
   }
 `;
+
+export const DELETE_USER = gql`
+  mutation delete($id: String!) {
+    deleteUser(id: $id)
+  }
+`;

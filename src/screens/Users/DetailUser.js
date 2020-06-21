@@ -11,15 +11,25 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {responsiveFontSize} from 'react-native-responsive-dimensions';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {useQuery} from '@apollo/react-hooks';
-import {DETAIL_USER} from '../../graphql/tag';
+import {useQuery, useMutation} from '@apollo/react-hooks';
+import {
+  DETAIL_USER,
+  DELETE_USER,
+  ALL_USER,
+  GET_PROFILE,
+} from '../../graphql/tag';
 
 const DetailUser = () => {
-  const {navigate} = useNavigation();
   const {params} = useRoute();
+  const {navigate, goBack} = useNavigation();
+  const [deleteUser, load] = useMutation(DELETE_USER, {
+    variables: {id: params.id},
+  });
   const {data, loading} = useQuery(DETAIL_USER, {
     variables: {id: params.id},
   });
+  const allUser = useQuery(ALL_USER);
+  const profile = useQuery(GET_PROFILE);
   const iconSize = responsiveFontSize(4);
   const LeftIcon = icon => props => (
     <Icon name={icon} {...props} size={iconSize} />
@@ -27,10 +37,19 @@ const DetailUser = () => {
   const onDeleteUser = () => {
     Alert.alert('', 'Are you sure delete user ?', [
       {text: 'No'},
-      {text: 'Yes', onPress: () => {}},
+      {
+        text: 'Yes',
+        onPress: async () => {
+          const userDelete = await deleteUser();
+          await Promise.all([allUser.refetch(), profile.refetch()]);
+          if (userDelete.data) {
+            goBack();
+          }
+        },
+      },
     ]);
   };
-  const onEditUser = () => navigate('editUser');
+  const onEditUser = () => navigate('editUser', {data: data.user});
   if (loading) return <ActivityIndicator />;
   return (
     <View style={styles.container}>
@@ -49,10 +68,15 @@ const DetailUser = () => {
         <Divider />
         {data.user.role !== 'super admin' && (
           <View style={styles.viewButton}>
-            <Button mode="contained" onPress={onEditUser} style={styles.button}>
+            <Button
+              mode="contained"
+              disabled={load.loading}
+              onPress={onEditUser}
+              style={styles.button}>
               Edit User
             </Button>
             <Button
+              disabled={load.loading}
               mode="outlined"
               onPress={onDeleteUser}
               style={styles.button}>

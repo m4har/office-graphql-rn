@@ -1,25 +1,29 @@
 import React from 'react';
 import {View, StyleSheet, FlatList} from 'react-native';
-import {Card, Avatar, List, FAB} from 'react-native-paper';
+import {Card, Avatar, List, FAB, ActivityIndicator} from 'react-native-paper';
 import {useNavigation} from '@react-navigation/native';
+import {useQuery} from '@apollo/react-hooks';
+import {MY_TENANT} from '../../graphql/tag';
 
-const arr = [1, 2, 3, 4, 5, 6, 7, 8, 1, 1];
 const Tenants = () => {
+  const {data, loading} = useQuery(MY_TENANT);
   const {navigate} = useNavigation();
   const keyExtractor = (_, index) => index.toLocaleString();
-  const RenderItem = () => (
+  const RenderItem = ({item}) => (
     <Card style={styles.card}>
       <List.Item
-        title="Mahardicka"
-        description="mahardicka404@gmail.com"
+        title={item.name}
+        description={item.email}
         left={props => <Avatar.Icon icon="office-building" />}
       />
     </Card>
   );
+  if (loading) return <ActivityIndicator />;
   return (
     <View style={styles.container}>
       <FlatList
-        data={arr}
+        data={data.tenant}
+        extraData={data.tenant}
         keyExtractor={keyExtractor}
         renderItem={RenderItem}
       />

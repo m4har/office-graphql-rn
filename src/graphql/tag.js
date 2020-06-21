@@ -74,3 +74,18 @@ export const DELETE_USER = gql`
     deleteUser(id: $id)
   }
 `;
+
+export const MY_TENANT = gql`
+  {
+    tenant {
+      name
+      email
+    }
+  }
+`;
+
+export const ADD_TENANT = gql`
+  mutation add($name: String!, $email: String!, $from: String!) {
+    addTenant(name: $name, email: $email, from: $from)
+  }
+`;

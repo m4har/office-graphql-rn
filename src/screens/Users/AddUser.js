@@ -1,75 +1,94 @@
-import React, {useRef} from 'react';
-import {View, StyleSheet, TouchableOpacity} from 'react-native';
-import {
-  Card,
-  TextInput,
-  Paragraph,
-  Text,
-  Divider,
-  Button,
-} from 'react-native-paper';
+import React, {useRef, useState} from 'react';
+import {View, StyleSheet, Alert} from 'react-native';
+import {Card, TextInput, Button} from 'react-native-paper';
+import {Roles} from '../../components';
+import isEmail from '../../utils/isEmail';
+import {useMutation, useQuery} from '@apollo/react-hooks';
+import {CREATE_USER, ALL_USER, GET_PROFILE} from '../../graphql/tag';
+import {useNavigation} from '@react-navigation/native';
 
 const AddUser = () => {
+  const [newUser, {loading}] = useMutation(CREATE_USER);
+  const allUser = useQuery(ALL_USER);
+  const profile = useQuery(GET_PROFILE);
+  const {goBack} = useNavigation();
+  const [state, setState] = useState({
+    name: '',
+    email: '',
+    role: '',
+    password: '',
+    rePassword: '',
+  });
   const inputEmail = useRef(null);
   const inputPass = useRef(null);
+  const onSetState = type => input =>
+    setState(prev => ({...prev, [type]: input}));
+  const onAddUser = async () => {
+    try {
+      if (state.name === '') return Alert.alert('', 'name is empety');
+      if (!isEmail(state.email)) return Alert.alert('', 'email not valid');
+      if (state.role === '') return Alert.alert('', 'role is empety');
+      if (state.password === '') return Alert.alert('', 'password is empety');
+      if (state.password !== state.rePassword)
+        return Alert.alert('', 'password is not same');
+      const users = await newUser({
+        variables: {...state, password: state.password.toLowerCase()},
+      });
+      if (users.data) {
+        await Promise.all([allUser.refetch(), profile.refetch()]);
+        Alert.alert('', 'user added', [{text: 'OK', onPress: () => goBack()}]);
+      }
+    } catch (error) {
+      Alert.alert('', error.graphQLErrors[0]?.message || 'network error');
+    }
+  };
   return (
     <View style={styles.container}>
       <Card style={styles.card}>
         <TextInput
+          value={state.name}
           style={styles.input}
           returnKeyType="next"
           onSubmitEditing={() => inputEmail.current.focus()}
           label="Name"
           mode="outlined"
+          onChangeText={onSetState('name')}
         />
         <TextInput
+          value={state.email}
           ref={inputEmail}
           style={styles.input}
           label="Email"
+          keyboardType="email-address"
           mode="outlined"
+          onChangeText={onSetState('email')}
         />
-        <Paragraph>Role</Paragraph>
-        {['super', 'admin', 'operator', 'manager'].map((item, index) => {
-          if (item === 'super') return <View key={index} />;
-          return (
-            <View key={index}>
-              <TouchableOpacity
-                disabled={item === 'super'}
-                style={styles.radio}
-                onPress={() => {}}>
-                <View
-                  value={item}
-                  color="#000"
-                  style={[
-                    styles.radioCirle,
-                    {
-                      backgroundColor:
-                        item === 'operator' ? '#102f4a' : 'transparent',
-                    },
-                  ]}
-                />
-                <Text>{item}</Text>
-              </TouchableOpacity>
-              <Divider />
-            </View>
-          );
-        })}
+        <Roles onSelect={onSetState('role')} value={state.role} />
         <TextInput
           style={styles.input}
+          value={state.password}
           returnKeyType="next"
           onSubmitEditing={() => inputPass.current.focus()}
           label="Password"
           secureTextEntry
           mode="outlined"
+          onChangeText={onSetState('password')}
         />
         <TextInput
+          value={state.rePassword}
           ref={inputPass}
           style={styles.input}
           label="Re Password"
           secureTextEntry
           mode="outlined"
+          onChangeText={onSetState('rePassword')}
         />
-        <Button style={styles.button} mode="contained">
+        <Button
+          disabled={loading}
+          loading={loading}
+          style={styles.button}
+          onPress={onAddUser}
+          mode="contained">
           Register
         </Button>
       </Card>
@@ -85,18 +104,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     marginVertical: 10,
     padding: 10,
-  },
-  radio: {
-    flexDirection: 'row',
-    height: 25,
-    marginTop: 5,
-  },
-  radioCirle: {
-    borderRadius: 50,
-    height: 20,
-    width: 20,
-    borderWidth: 0.5,
-    marginHorizontal: 5,
   },
   input: {
     marginTop: 5,

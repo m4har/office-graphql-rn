@@ -1,25 +1,34 @@
 import React, {useState, useCallback, useRef} from 'react';
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, Text, Alert} from 'react-native';
 import {TextInput, Button} from 'react-native-paper';
 import {responsiveScreenHeight} from 'react-native-responsive-dimensions';
-import {useNavigation} from '@react-navigation/native';
+import {useMutation} from '@apollo/react-hooks';
+import {useStoreActions} from 'easy-peasy';
+import {LOGIN_MUTATE} from '../../graphql/tag';
 
 const LoginScreen = () => {
   const [state, setState] = useState({email: '', password: ''});
-  const {navigate} = useNavigation();
+  const [mutateLogin, {loading, error}] = useMutation(LOGIN_MUTATE);
+  const setToken = useStoreActions(ac => ac.auth.setToken);
   const inputPass = useRef(null);
-  const setEmail = useCallback(email => {
+  const setEmail = email => {
     setState(prev => ({...prev, email}));
-  }, []);
-  const setPassword = useCallback(password => {
+  };
+  const setPassword = password => {
     setState(prev => ({...prev, password}));
-  }, []);
+  };
   const onNextPassword = () => {
     inputPass.current.focus();
   };
-  const actionLogin = useCallback(() => {
-    navigate('dashboard');
-  }, []);
+  const actionLogin = async () => {
+    try {
+      const body = {email: state.email.toLowerCase(), password: state.password};
+      const {data} = await mutateLogin({variables: body});
+      setToken(data.loginUser.token);
+    } catch (err) {
+      Alert.alert('', error.graphQLErrors[0].message);
+    }
+  };
   return (
     <View style={styles.container}>
       <TextInput
@@ -32,6 +41,7 @@ const LoginScreen = () => {
         value={state.email}
         onChangeText={setEmail}
         onSubmitEditing={onNextPassword}
+        disabled={loading}
       />
       <TextInput
         testID="inputPassword"
@@ -42,10 +52,13 @@ const LoginScreen = () => {
         ref={inputPass}
         value={state.password}
         onChangeText={setPassword}
+        disabled={loading}
       />
       <Button
         testID="buttonlogin"
         mode="contained"
+        disabled={loading}
+        loading={loading}
         style={styles.button}
         onPress={actionLogin}>
         LOGIN

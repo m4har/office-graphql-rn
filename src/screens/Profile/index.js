@@ -2,10 +2,13 @@ import React, {useCallback} from 'react';
 import {View, StyleSheet, Alert} from 'react-native';
 import {Button} from 'react-native-paper';
 import {useNavigation} from '@react-navigation/native';
+import {useStoreActions} from 'easy-peasy';
+import {useApolloClient, useLazyQuery} from '@apollo/react-hooks';
 import {MyPhoto, MyInfo} from './components';
 
 const Profile = () => {
-  const {navigate} = useNavigation();
+  const client = useApolloClient();
+  const setToken = useStoreActions(ac => ac.auth.setToken);
   const actionLogout = useCallback(() => {
     Alert.alert('', 'Are you sure want logout ?', [
       {
@@ -14,7 +17,10 @@ const Profile = () => {
       },
       {
         text: 'Yes',
-        onPress: () => navigate('login'),
+        onPress: () => {
+          client.clearStore();
+          setToken('');
+        },
       },
     ]);
   }, []);

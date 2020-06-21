@@ -2,20 +2,22 @@ import React, {memo} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {Avatar, Subheading, Divider} from 'react-native-paper';
 import {useResponsiveFontSize} from 'react-native-responsive-dimensions';
+import {useQuery} from '@apollo/react-hooks';
+import {GET_PROFILE} from '../../../graphql/tag';
 
 export const MyPhoto = memo(() => {
+  const {data, loading, error} = useQuery(GET_PROFILE);
   return (
     <>
       <View style={styles.container}>
         <Avatar.Image
           size={useResponsiveFontSize(10)}
           source={{
-            uri:
-              'https://image.freepik.com/free-vector/man-avatar-profile-round-icon_24640-14046.jpg',
+            uri: data?.profile?.photo || '',
           }}
         />
         <View style={styles.name}>
-          <Subheading>Mahardicka Nurachman</Subheading>
+          <Subheading>{data?.profile?.name}</Subheading>
         </View>
       </View>
       <Divider />

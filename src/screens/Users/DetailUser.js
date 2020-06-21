@@ -66,24 +66,25 @@ const DetailUser = () => {
         <Divider />
         <List.Item title={data.user.email} left={LeftIcon('email')} />
         <Divider />
-        {data.user.role !== 'super admin' && (
-          <View style={styles.viewButton}>
-            <Button
-              mode="contained"
-              disabled={load.loading}
-              onPress={onEditUser}
-              style={styles.button}>
-              Edit User
-            </Button>
-            <Button
-              disabled={load.loading}
-              mode="outlined"
-              onPress={onDeleteUser}
-              style={styles.button}>
-              Delete user
-            </Button>
-          </View>
-        )}
+        {data.user.role !== 'super admin' &&
+          profile.data.profile.role === 'super admin' && (
+            <View style={styles.viewButton}>
+              <Button
+                mode="contained"
+                disabled={load.loading}
+                onPress={onEditUser}
+                style={styles.button}>
+                Edit User
+              </Button>
+              <Button
+                disabled={load.loading}
+                mode="outlined"
+                onPress={onDeleteUser}
+                style={styles.button}>
+                Delete user
+              </Button>
+            </View>
+          )}
       </Card>
     </View>
   );

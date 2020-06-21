@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, StyleSheet, TouchableOpacity} from 'react-native';
+import React, {useState} from 'react';
+import {View, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import {
   Card,
   TextInput,
@@ -9,8 +9,40 @@ import {
   Button,
 } from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useRoute, useNavigation} from '@react-navigation/native';
+import {Roles} from '../../components';
+import {useMutation, useQuery} from '@apollo/react-hooks';
+import {EDIT_USER, ALL_USER} from '../../graphql/tag';
 
 const EditUser = () => {
+  const [actionEdit, {loading, error}] = useMutation(EDIT_USER);
+  const users = useQuery(ALL_USER);
+  const {
+    params: {data},
+  } = useRoute();
+  const {navigate} = useNavigation();
+  const [state, setState] = useState({
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+  });
+  const onSetState = type => input =>
+    setState(prev => ({...prev, [type]: input}));
+  const onUpdateUser = () =>
+    Alert.alert('', 'Sure edit user ?', [
+      {text: 'No'},
+      {
+        text: 'Yes',
+        onPress: async () => {
+          const edit = await actionEdit({variables: state});
+          if (edit.data) {
+            await users.refetch();
+            navigate('user');
+          }
+        },
+      },
+    ]);
   return (
     <View style={styles.container}>
       <Card style={styles.card}>
@@ -18,41 +50,24 @@ const EditUser = () => {
           style={styles.input}
           label="Name"
           mode="outlined"
-          value="Mahardicka Nurachman"
+          value={state.name}
+          onChangeText={onSetState('name')}
         />
         <TextInput
+          disabled
           style={styles.input}
           label="Email"
           mode="outlined"
-          value="mahardicka404@gmail.com"
+          value={state.email}
+          onChangeText={onSetState('email')}
         />
-        <Paragraph>Role</Paragraph>
-        {['super', 'admin', 'operator', 'manager'].map((item, index) => {
-          if (item === 'super') return <View key={index} />;
-          return (
-            <View key={index}>
-              <TouchableOpacity
-                disabled={item === 'super'}
-                style={styles.radio}
-                onPress={() => {}}>
-                <View
-                  value={item}
-                  color="#000"
-                  style={[
-                    styles.radioCirle,
-                    {
-                      backgroundColor:
-                        item === 'operator' ? '#102f4a' : 'transparent',
-                    },
-                  ]}
-                />
-                <Text>{item}</Text>
-              </TouchableOpacity>
-              <Divider />
-            </View>
-          );
-        })}
-        <Button style={styles.updateButton} mode="contained" onPress={() => {}}>
+        <Roles value={state.role} onSelect={onSetState('role')} />
+        <Button
+          loading={loading}
+          disabled={loading}
+          style={styles.updateButton}
+          mode="contained"
+          onPress={onUpdateUser}>
           Update
         </Button>
       </Card>

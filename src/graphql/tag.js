@@ -62,3 +62,9 @@ export const CREATE_USER = gql`
     createUser(name: $name, email: $email, password: $password, role: $role)
   }
 `;
+
+export const EDIT_USER = gql`
+  mutation edit($id: String!, $name: String!, $role: String!) {
+    editUser(id: $id, name: $name, role: $role)
+  }
+`;

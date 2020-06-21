@@ -1,6 +1,5 @@
 import {action, persist} from 'easy-peasy';
 import AsyncStorage from '@react-native-community/async-storage';
-import {SET_TOKEN, ERROR_TOKEN} from './types';
 
 export const storeLogin = persist(
   {
